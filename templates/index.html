@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div><span class="dot"></span></div>
+    </div>
+
+    <div class="form-container">
+        <h2>YouTube Scraping</h2>
+        <form id="scraper-form">
+            <label for="url">URL:</label>
+            <input type="url" name="url" id="url" placeholder="Enter YouTube URL" required>
+            <label for="data_type">What do you like to know?</label>
+            <select name="data_type" id="data_type" required>
+                <option value="views">Views</option>
+                <option value="comments">Comments</option>
+                <option value="likes">Likes</option>
+                <option value="subscribers">Subscribers</option>
+            </select>
+            <button type="submit">Scrape data</button>
+        </form>
+
+        <div id="results">
+            <h3>Results:</h3>
+            <pre id="result-data"></pre>
+        </div>
+    </div>
+</body>
+
+</html>

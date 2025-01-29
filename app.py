@@ -3,51 +3,51 @@ import googleapiclient.discovery
 
 app = Flask(__name__)
 
-# Replace with your actual YouTube API key
-YOUTUBE_API_KEY = "AIzaSyCf4r6vIlVsNcmaEaPS-mm8KARh9KS77sg"
+YOUTUBE_API_KEY = "YOUR_YOUTUBE_API_KEY"  # Replace with your actual API key
 
 def scrape_yt_data(url, data_type):
     youtube = googleapiclient.discovery.build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
 
-    video_id, channel_id = None, None
+    video_id = None
+    channel_id = None
 
-    # Extract video ID or channel ID from URL
+    # Extract Video ID
     if "watch?v=" in url:
         video_id = url.split("watch?v=")[-1].split("&")[0]
     elif "/channel/" in url:
         channel_id = url.split("/channel/")[-1].split("/")[0]
     else:
-        return {"error": "Invalid URL"}
+        return {"error": "Invalid URL format"}
 
-    # If user asks for subscribers from a video URL, first get the channel ID
-    if video_id and data_type == "subscribers":
+    # Get Channel ID from Video (if needed)
+    if video_id and data_type == 'subscribers':
         try:
             video_request = youtube.videos().list(part="snippet", id=video_id)
             video_response = video_request.execute()
 
-            if "items" in video_response and len(video_response["items"]) > 0:
-                channel_id = video_response["items"][0]["snippet"]["channelId"]
-            else:
-                return {"error": "Could not retrieve channel ID from video"}
+            if "items" not in video_response or not video_response["items"]:
+                return {"error": "Video not found"}
+            
+            channel_id = video_response["items"][0]["snippet"]["channelId"]
 
         except Exception as e:
-            return {"error": f"Error retrieving channel ID: {str(e)}"}
+            return {"error": f"Error fetching channel ID: {str(e)}"}
 
-    # Fetch subscriber count if channel ID is available
-    if channel_id and data_type == "subscribers":
+    # Get Subscribers
+    if channel_id and data_type == 'subscribers':
         try:
-            request = youtube.channels().list(part="statistics", id=channel_id)
-            response = request.execute()
+            channel_request = youtube.channels().list(part="statistics", id=channel_id)
+            channel_response = channel_request.execute()
 
-            if "items" in response and len(response["items"]) > 0:
-                return {"subscribers": response["items"][0]["statistics"].get("subscriberCount", "Data not available")}
+            if "items" in channel_response and channel_response["items"]:
+                return {"subscribers": channel_response["items"][0]["statistics"].get("subscriberCount", "Data not available")}
             else:
-                return {"error": "Channel not found or data unavailable"}
+                return {"error": "Channel not found"}
 
         except Exception as e:
             return {"error": f"Error retrieving subscriber count: {str(e)}"}
 
-    # Fetch video-related data (likes, views, comments)
+    # Get Comments, Likes, or Views
     if video_id:
         if data_type == 'comments':
             try:
@@ -60,21 +60,14 @@ def scrape_yt_data(url, data_type):
             except Exception as e:
                 return {"error": f"Error retrieving comments: {str(e)}"}
 
-        elif data_type == 'likes':
+        elif data_type in ['likes', 'views']:
             try:
                 request = youtube.videos().list(part="statistics", id=video_id)
                 response = request.execute()
-                return {"likes": response.get("items", [])[0]["statistics"]["likeCount"]}
+                stats = response.get("items", [])[0]["statistics"]
+                return {data_type: stats.get("likeCount" if data_type == 'likes' else "viewCount", "Data not available")}
             except Exception as e:
-                return {"error": f"Error retrieving likes: {str(e)}"}
-
-        elif data_type == 'views': 
-            try:
-                request = youtube.videos().list(part="statistics", id=video_id)
-                response = request.execute()
-                return {"views": response.get("items", [])[0]["statistics"]["viewCount"]}
-            except Exception as e:
-                return {"error": f"Error retrieving views: {str(e)}"}
+                return {"error": f"Error retrieving {data_type}: {str(e)}"}
 
     return {"error": "Invalid request"}
 

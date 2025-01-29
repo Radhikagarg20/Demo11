@@ -3,7 +3,7 @@ body {
     margin: 0;
     height: 100%;
     background: rgb(134,152,245);
-    background: radial-gradient(circle, rgba(134,152,245,1) 0%, rgba(252,70,107,1) 100%);
+    background: radial-gradient(circle, rgba(212,252,121,1) 0%, rgba(150,230,161,1) 100%);
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
     overflow-y: auto;

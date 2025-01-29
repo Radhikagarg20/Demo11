@@ -14,7 +14,7 @@ def scrape_yt_data(url, data_type):
     elif "/channel/" in url:
         channel_id = url.split("/channel/")[-1].split("/")[0]
         video_id = None
-    else:
+    else: 
         return {"error": "Invalid URL"}
 
     if video_id:
@@ -35,12 +35,19 @@ def scrape_yt_data(url, data_type):
             return {"views": response.get("items", [])[0]["statistics"]["viewCount"]}
         else:
             return {"error": "Invalid YouTube video request."}
-    
+
     elif channel_id:
         if data_type == 'subscribers':
-            request = youtube.channels().list(part="statistics", id=channel_id)
-            response = request.execute()
-            return {"subscribers": response.get("items", [])[0]["statistics"]["subscriberCount"]}
+            try:
+                request = youtube.channels().list(part="statistics", id=channel_id)
+                response = request.execute()
+                # Check if the response contains valid statistics
+                if 'items' in response and len(response['items']) > 0:
+                    return {"subscribers": response['items'][0]["statistics"].get("subscriberCount", "Data not available")}
+                else:
+                    return {"error": "Channel not found or data unavailable"}
+            except Exception as e:
+                return {"error": f"Error retrieving subscriber count: {str(e)}"}
         else:
             return {"error": "Invalid YouTube channel request."}
     
@@ -59,4 +66,3 @@ def scrape():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-
